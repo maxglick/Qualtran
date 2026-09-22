@@ -23,7 +23,7 @@ from numpy.typing import NDArray
 
 from qualtran import QAny, QBit, Register
 from qualtran._infra.data_types import BQUInt
-from qualtran._infra.gate_with_registers import total_bits
+from qualtran._infra.gate_with_registers import merge_qubits, total_bits
 from qualtran.bloqs.multiplexers.unary_iteration_bloq import UnaryIterationGate
 from qualtran.simulation.classical_sim import ClassicalValT
 
@@ -102,7 +102,9 @@ class SelectedMajoranaFermion(UnaryIterationGate):
     ) -> Iterator[cirq.OP_TREE]:
         quregs['accumulator'] = np.array(context.qubit_manager.qalloc(1))
         control: Sequence['cirq.Qid'] = (
-            quregs[self.control_regs[0].name].tolist() if total_bits(self.control_registers) else []
+            merge_qubits(self.control_registers, **quregs)
+            if total_bits(self.control_registers)
+            else []
         )
         yield cirq.X(*quregs['accumulator']).controlled_by(*control)
         yield super(SelectedMajoranaFermion, self).decompose_from_registers(
