@@ -12,6 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import itertools
+
 import cirq
 import numpy as np
 import pytest
@@ -182,4 +184,13 @@ def test_selected_majorana_fermion_classical_action_multiple_controls():
     )
     assert_consistent_phased_classical_action(
         gate, selection=range(4), target=range(2**4), control1=range(2), control2=range(2)
+    )
+
+    gate = SelectedMajoranaFermion(
+        selection_regs=Register('selection', BQUInt(2, 3)),
+        control_regs=Register('control', QBit(), shape=(4,)),
+        target_gate=cirq.X,
+    )
+    assert_consistent_phased_classical_action(
+        gate, selection=range(3), target=range(2**3), control=itertools.product(range(2), repeat=4)
     )

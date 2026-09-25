@@ -143,15 +143,16 @@ class SelectedMajoranaFermion(UnaryIterationGate):
     def on_classical_vals(self, **vals) -> Dict[str, 'ClassicalValT']:
         if self.target_gate != cirq.X and self.target_gate != cirq.Z:
             return NotImplemented
+        # If any control register is not in the all 1's state, exit early.
         for control_register in self.control_registers:
-            if vals[control_register.name] == 0:
+            if np.any(np.asarray(vals[control_register.name]) != (2**control_register.bitsize - 1)):
                 return vals
-        selection = 0
-        for selection_register in self.selection_registers:
-            selection = (
-                selection * (selection_register.dtype.iteration_length_or_zero())
-                + vals[selection_register.name]
-            )
+
+        selection_shape = tuple(
+            int(reg.dtype.iteration_length_or_zero()) for reg in self.selection_regs
+        )
+        selection_idx = tuple(vals[reg.name] for reg in self.selection_regs)
+        selection = int(np.ravel_multi_index(selection_idx, selection_shape))
 
         # When target_gate == cirq.X, flip the selection-th bit in target. The ith bit of a
         # size N regirster is addressed with the unsigned integer 2^(N - 1 - i) in our big
@@ -166,15 +167,16 @@ class SelectedMajoranaFermion(UnaryIterationGate):
     def basis_state_phase(self, **vals) -> Union[complex, None]:
         if self.target_gate != cirq.X and self.target_gate != cirq.Z:
             return None
+        # If any control register is not in the all 1's state, exit early.
         for control_register in self.control_registers:
-            if vals[control_register.name] == 0:
+            if np.any(np.asarray(vals[control_register.name]) != (2**control_register.bitsize - 1)):
                 return 1
-        selection = 0
-        for selection_register in self.selection_registers:
-            selection = (
-                selection * (selection_register.dtype.iteration_length_or_zero())
-                + vals[selection_register.name]
-            )
+
+        selection_shape = tuple(
+            int(reg.dtype.iteration_length_or_zero()) for reg in self.selection_regs
+        )
+        selection_idx = tuple(vals[reg.name] for reg in self.selection_regs)
+        selection = int(np.ravel_multi_index(selection_idx, selection_shape))
 
         target = vals['target']
         max_selection = total_bits(self.target_registers) - 1
