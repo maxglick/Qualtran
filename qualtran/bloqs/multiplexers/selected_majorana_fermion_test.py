@@ -192,5 +192,8 @@ def test_selected_majorana_fermion_classical_action_multiple_controls():
         target_gate=cirq.X,
     )
     assert_consistent_phased_classical_action(
-        gate, selection=range(3), target=range(2**3), control=itertools.product(range(2), repeat=4)
+        gate,
+        selection=range(3),
+        target=range(2**3),
+        control=np.array(list(itertools.product(range(2), repeat=4))),
     )
